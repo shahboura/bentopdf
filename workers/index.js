@@ -1,16 +1,18 @@
 /**
- * Cloudflare Pages Function that serves the LibreOffice WASM assets from the
- * private `bentopdf-assets` R2 bucket.
+ * Cloudflare Worker entry for the BentoPDF fork deployment.
  *
- * Route: /libreoffice-wasm/*
- * Required Pages binding: LIBREOFFICE_BUCKET -> bentopdf-assets
+ * Static assets are served directly by Workers Static Assets. This script only
+ * runs for /libreoffice-wasm/* (configured via `run_worker_first` in
+ * wrangler.toml) and streams those files from the private `bentopdf-assets` R2
+ * bucket, because two of them exceed the 25 MiB per-asset limit.
  *
- * The BentoPDF loader (`src/js/utils/libreoffice-loader.ts`) requests these
- * files at `BASE_URL + 'libreoffice-wasm/'`, i.e. same-origin, so no CORS is
- * involved. The `.gz` files are streamed untouched (no `Content-Encoding`)
- * because the loader sniffs the gzip magic bytes and decompresses them itself.
+ * The BentoPDF loader requests them at `BASE_URL + 'libreoffice-wasm/'`
+ * (same-origin), and the `.gz` files are streamed untouched (no
+ * `Content-Encoding`) because the loader sniffs the gzip magic bytes and
+ * decompresses them itself.
  */
 
+const PATH_PREFIX = '/libreoffice-wasm/';
 const BUCKET_PREFIX = 'libreoffice-wasm/';
 
 const ALLOWED_FILES = new Set([
@@ -27,9 +29,7 @@ function contentTypeFor(name) {
   return 'application/octet-stream';
 }
 
-export async function onRequest(context) {
-  const { request, env, params } = context;
-
+async function serveLibreOfficeAsset(request, env, name) {
   if (request.method !== 'GET' && request.method !== 'HEAD') {
     return new Response('Method Not Allowed', {
       status: 405,
@@ -44,9 +44,6 @@ export async function onRequest(context) {
       headers: { 'Cache-Control': 'no-store' },
     });
   }
-
-  const segments = Array.isArray(params.path) ? params.path : [params.path];
-  const name = segments.filter(Boolean).join('/');
 
   if (!name || name.includes('..') || !ALLOWED_FILES.has(name)) {
     return new Response('Not Found', { status: 404 });
@@ -85,3 +82,22 @@ export async function onRequest(context) {
 
   return new Response(object.body, { status: 200, headers });
 }
+
+export default {
+  async fetch(request, env) {
+    const { pathname } = new URL(request.url);
+
+    if (pathname.startsWith(PATH_PREFIX)) {
+      let name;
+      try {
+        name = decodeURIComponent(pathname.slice(PATH_PREFIX.length));
+      } catch {
+        return new Response('Bad Request', { status: 400 });
+      }
+      return serveLibreOfficeAsset(request, env, name);
+    }
+
+    // Safety fallback; run_worker_first keeps this from running for normal pages.
+    return env.ASSETS.fetch(request);
+  },
+};

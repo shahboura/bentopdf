@@ -1,0 +1,9 @@
+# Excluded from Workers Static Assets.
+# The LibreOffice blobs are served from R2 by the Worker (see `run_worker_first`
+# in wrangler.toml); the compression sidecars and source maps are redundant
+# because Cloudflare compresses on the fly. This also keeps a local
+# `wrangler deploy` from tripping the 25 MiB per-asset limit.
+libreoffice-wasm/
+*.br
+*.gz
+*.map

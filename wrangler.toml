@@ -1,12 +1,22 @@
-# Cloudflare Pages project configuration.
-# This file is the source of truth for Pages Functions bindings; once deployed,
-# these fields are read-only in the Cloudflare dashboard.
+# Cloudflare Workers configuration for the BentoPDF fork deployment.
 #
-# Deploy with: npx wrangler pages deploy dist --project-name=bentopdf --branch=main
+# Static assets are served by Workers Static Assets; the Worker script only
+# handles /libreoffice-wasm/* (the two >25 MiB LibreOffice blobs live in R2).
+#
+# Deploy via CI (.github/workflows/cloudflare-workers.yml), which prunes dist
+# first. `public/.assetsignore` additionally excludes the R2-served LibreOffice
+# files and build sidecars, so a local `wrangler deploy` works too.
 
 name = "bentopdf"
-pages_build_output_dir = "./dist"
+main = "workers/index.js"
 compatibility_date = "2026-09-18"
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+not_found_handling = "404-page"
+html_handling = "auto-trailing-slash"
+run_worker_first = ["/libreoffice-wasm/*"]
 
 [[r2_buckets]]
 binding = "LIBREOFFICE_BUCKET"

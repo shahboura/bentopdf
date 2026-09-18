@@ -59,10 +59,10 @@ jobs:
         if: steps.merge.outputs.changed == 'true'
         run: git push origin main
 
-      - name: Trigger Cloudflare Pages deploy
+      - name: Trigger Cloudflare Workers deploy
         # A push made with GITHUB_TOKEN does not trigger other workflows, so we
         # explicitly dispatch the deploy workflow (workflow_dispatch is exempt).
         if: steps.merge.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh workflow run cloudflare-pages.yml --ref main
+        run: gh workflow run cloudflare-workers.yml --ref main

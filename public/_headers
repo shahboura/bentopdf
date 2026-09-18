@@ -1,4 +1,4 @@
-# Cloudflare Pages response headers (fork-only).
+# Cloudflare (Workers Static Assets) response headers (fork-only).
 # CSP and security headers mirror the defaults of scripts/generate-security-headers.mjs
 # (used for the nginx/Docker deployment); update both if the app's origins change.
 # X-Robots-Tag keeps this deployment out of search engines (the static equivalent

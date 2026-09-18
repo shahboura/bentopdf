@@ -3,8 +3,9 @@ src/partials/footer.html
 
 blog/posts/
 
-# Cloudflare Pages config (TOML is not supported by Prettier without a plugin)
+# Cloudflare config (TOML is not supported by Prettier without a plugin)
 wrangler.toml
 
-# Cloudflare Pages headers file (extensionless; no Prettier parser)
+# Cloudflare headers/assets-ignore files (extensionless; no Prettier parser)
 public/_headers
+public/.assetsignore
