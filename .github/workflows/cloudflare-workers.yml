@@ -1,4 +1,4 @@
-name: Deploy to Cloudflare Pages
+name: Deploy to Cloudflare Workers
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
   deployments: write
 
 concurrency:
-  group: cloudflare-pages-${{ github.ref }}
+  group: cloudflare-workers-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -19,13 +19,13 @@ env:
   BASE_URL: /
   SIMPLE_MODE: ${{ vars.SIMPLE_MODE || 'true' }}
   SITE_URL: ${{ vars.SITE_URL }}
-  R2_BUCKET: ${{ vars.R2_BUCKET }}
-  CF_PAGES_PROJECT: ${{ vars.CF_PAGES_PROJECT }}
+  # Single source of truth is the R2 binding in wrangler.toml; keep these in sync.
+  R2_BUCKET: bentopdf-assets
   WRANGLER_VERSION: '4.134.0'
 
 jobs:
   deploy:
-    name: Build and deploy to Cloudflare Pages
+    name: Build and deploy to Cloudflare Workers
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -38,7 +38,7 @@ jobs:
         run: |
           set -euo pipefail
           missing=0
-          for name in CF_PAGES_PROJECT R2_BUCKET SITE_URL CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID; do
+          for name in SITE_URL CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID; do
             if [ -z "${!name:-}" ]; then
               echo "::error::Required configuration '${name}' is not set (repository variable or secret)"
               missing=1
@@ -63,10 +63,10 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Prepare dist for Cloudflare Pages
+      - name: Prepare dist for Workers Static Assets
         run: |
           set -euo pipefail
-          # LibreOffice WASM is served from R2 through the Pages Function.
+          # LibreOffice WASM is served from R2 by the Worker.
           rm -rf dist/libreoffice-wasm
           # Cloudflare compresses on the fly; sidecars and source maps are redundant.
           find dist -name '*.br' -delete
@@ -74,17 +74,17 @@ jobs:
           find dist -name '*.map' -delete
           echo "dist file count: $(find dist -type f | wc -l)"
 
-      - name: Enforce Cloudflare Pages limits
+      - name: Enforce Cloudflare limits
         run: |
           set -euo pipefail
           count=$(find dist -type f | wc -l)
           if [ "$count" -gt 20000 ]; then
-            echo "::error::dist contains $count files, above the Cloudflare Pages 20,000 free-tier file limit"
+            echo "::error::dist contains $count files, above the 20,000 free-tier file limit"
             exit 1
           fi
           oversized=$(find dist -type f -size +25M -print)
           if [ -n "$oversized" ]; then
-            echo "::error::These files exceed the Cloudflare Pages 25 MiB per-asset limit:"
+            echo "::error::These files exceed the 25 MiB per-asset limit:"
             echo "$oversized"
             exit 1
           fi
@@ -116,7 +116,7 @@ jobs:
               --remote
           done
 
-      - name: Deploy to Cloudflare Pages
+      - name: Deploy to Cloudflare Workers
         id: deploy
         uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0 # v4.0.0
         with:
@@ -124,7 +124,7 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           wranglerVersion: ${{ env.WRANGLER_VERSION }}
-          command: pages deploy dist --project-name=${{ env.CF_PAGES_PROJECT }} --branch=${{ github.ref_name }}
+          command: deploy
 
       - name: Smoke test site and LibreOffice assets
         env:
@@ -137,6 +137,13 @@ jobs:
             echo "::warning::No deployment URL available; skipping smoke test"
             exit 0
           fi
+          case "$base" in
+            https://www.bentopdf.com|https://bentopdf.com)
+              echo "::error::Refusing to smoke test against the upstream site (${base}); check SITE_URL and the deploy URL output"
+              exit 1
+              ;;
+          esac
+          echo "Smoke testing ${base}"
           check() {
             local path="$1" expected="$2" code
             code=$(curl -s -o /dev/null -w '%{http_code}' -I --retry 5 --retry-delay 5 --retry-all-errors "${base}${path}")
@@ -148,6 +155,7 @@ jobs:
           }
           check "/" 200
           check "/merge-pdf" 200
+          check "/fr/" 200
           for asset in soffice.js soffice.worker.js browser.worker.global.js soffice.wasm.gz soffice.data.gz; do
             check "/libreoffice-wasm/${asset}" 200
           done
