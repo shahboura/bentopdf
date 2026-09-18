@@ -1,0 +1,13 @@
+# Cloudflare Pages project configuration.
+# This file is the source of truth for Pages Functions bindings; once deployed,
+# these fields are read-only in the Cloudflare dashboard.
+#
+# Deploy with: npx wrangler pages deploy dist --project-name=bentopdf --branch=main
+
+name = "bentopdf"
+pages_build_output_dir = "./dist"
+compatibility_date = "2026-09-18"
+
+[[r2_buckets]]
+binding = "LIBREOFFICE_BUCKET"
+bucket_name = "bentopdf-assets"

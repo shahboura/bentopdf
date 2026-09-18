@@ -1,0 +1,153 @@
+name: Deploy to Cloudflare Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  deployments: write
+
+concurrency:
+  group: cloudflare-pages-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  HUSKY: '0'
+  BASE_URL: /
+  SIMPLE_MODE: ${{ vars.SIMPLE_MODE || 'true' }}
+  SITE_URL: ${{ vars.SITE_URL }}
+  R2_BUCKET: ${{ vars.R2_BUCKET }}
+  CF_PAGES_PROJECT: ${{ vars.CF_PAGES_PROJECT }}
+  WRANGLER_VERSION: '4.134.0'
+
+jobs:
+  deploy:
+    name: Build and deploy to Cloudflare Pages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Preflight configuration checks
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          missing=0
+          for name in CF_PAGES_PROJECT R2_BUCKET SITE_URL CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID; do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::Required configuration '${name}' is not set (repository variable or secret)"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm run test:run
+
+      - name: Build
+        run: npm run build
+
+      - name: Prepare dist for Cloudflare Pages
+        run: |
+          set -euo pipefail
+          # LibreOffice WASM is served from R2 through the Pages Function.
+          rm -rf dist/libreoffice-wasm
+          # Cloudflare compresses on the fly; sidecars and source maps are redundant.
+          find dist -name '*.br' -delete
+          find dist -name '*.gz' -delete
+          find dist -name '*.map' -delete
+          echo "dist file count: $(find dist -type f | wc -l)"
+
+      - name: Enforce Cloudflare Pages limits
+        run: |
+          set -euo pipefail
+          count=$(find dist -type f | wc -l)
+          if [ "$count" -gt 20000 ]; then
+            echo "::error::dist contains $count files, above the Cloudflare Pages 20,000 free-tier file limit"
+            exit 1
+          fi
+          oversized=$(find dist -type f -size +25M -print)
+          if [ -n "$oversized" ]; then
+            echo "::error::These files exceed the Cloudflare Pages 25 MiB per-asset limit:"
+            echo "$oversized"
+            exit 1
+          fi
+
+      - name: Upload LibreOffice assets to R2
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          files=(public/libreoffice-wasm/*)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "::error::No LibreOffice assets found in public/libreoffice-wasm/"
+            exit 1
+          fi
+          for f in "${files[@]}"; do
+            name=$(basename "$f")
+            case "$name" in
+              *.gz) content_type="application/gzip" ;;
+              *.js) content_type="application/javascript; charset=utf-8" ;;
+              *) content_type="application/octet-stream" ;;
+            esac
+            echo "Uploading ${name} to r2://${R2_BUCKET}/libreoffice-wasm/${name}"
+            npx --yes "wrangler@${WRANGLER_VERSION}" r2 object put "${R2_BUCKET}/libreoffice-wasm/${name}" \
+              --file="$f" \
+              --content-type="$content_type" \
+              --cache-control="public, max-age=3600" \
+              --remote
+          done
+
+      - name: Deploy to Cloudflare Pages
+        id: deploy
+        uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0 # v4.0.0
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          wranglerVersion: ${{ env.WRANGLER_VERSION }}
+          command: pages deploy dist --project-name=${{ env.CF_PAGES_PROJECT }} --branch=${{ github.ref_name }}
+
+      - name: Smoke test site and LibreOffice assets
+        env:
+          DEPLOY_URL: ${{ steps.deploy.outputs.deployment-url }}
+        run: |
+          set -euo pipefail
+          base="${DEPLOY_URL:-${SITE_URL}}"
+          base="${base%/}"
+          if [ -z "$base" ]; then
+            echo "::warning::No deployment URL available; skipping smoke test"
+            exit 0
+          fi
+          check() {
+            local path="$1" expected="$2" code
+            code=$(curl -s -o /dev/null -w '%{http_code}' -I --retry 5 --retry-delay 5 --retry-all-errors "${base}${path}")
+            echo "${path} -> ${code}"
+            if [ "$code" != "$expected" ]; then
+              echo "::error::Smoke test failed: ${path} returned ${code} (expected ${expected})"
+              exit 1
+            fi
+          }
+          check "/" 200
+          check "/merge-pdf" 200
+          for asset in soffice.js soffice.worker.js browser.worker.global.js soffice.wasm.gz soffice.data.gz; do
+            check "/libreoffice-wasm/${asset}" 200
+          done

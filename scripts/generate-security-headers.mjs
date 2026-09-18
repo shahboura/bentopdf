@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { writeFileSync } from 'node:fs';
+import { existsSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -92,15 +92,28 @@ const docsDirectives = [
 const csp = directives.join('; ');
 const docsCsp = docsDirectives.join('; ');
 
-const commonHeaders = `add_header X-Frame-Options "SAMEORIGIN" always;
-add_header X-Content-Type-Options "nosniff" always;
-add_header X-XSS-Protection "1; mode=block" always;
-add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-add_header Permissions-Policy "geolocation=(), camera=(), microphone=(), payment=(), usb=(), interest-cohort=()" always;
-add_header Cross-Origin-Opener-Policy "same-origin" always;
-add_header Cross-Origin-Embedder-Policy "credentialless" always;
-add_header Cross-Origin-Resource-Policy "cross-origin" always;
-`;
+// Header values shared by the nginx and Cloudflare Pages outputs.
+const securityHeaderPairs = [
+  ['X-Frame-Options', 'SAMEORIGIN'],
+  ['X-Content-Type-Options', 'nosniff'],
+  ['X-XSS-Protection', '1; mode=block'],
+  ['Referrer-Policy', 'strict-origin-when-cross-origin'],
+  [
+    'Permissions-Policy',
+    'geolocation=(), camera=(), microphone=(), payment=(), usb=(), interest-cohort=()',
+  ],
+  ['Cross-Origin-Opener-Policy', 'same-origin'],
+  // `credentialless` matches the live production site and keeps cross-origin
+  // CDN/font assets working. Safari does not support it; switch to `require-corp`
+  // if Office->PDF must work on Safari (and audit cross-origin assets).
+  ['Cross-Origin-Embedder-Policy', 'credentialless'],
+  ['Cross-Origin-Resource-Policy', 'cross-origin'],
+];
+
+const commonHeaders =
+  securityHeaderPairs
+    .map(([name, value]) => `add_header ${name} "${value}" always;`)
+    .join('\n') + '\n';
 
 const contents = `add_header Content-Security-Policy "${csp}" always;
 ${commonHeaders}`;
@@ -108,10 +121,31 @@ ${commonHeaders}`;
 const docsContents = `add_header Content-Security-Policy "${docsCsp}" always;
 ${commonHeaders}`;
 
+// Cloudflare Pages `_headers` uses a different syntax than nginx.
+const cloudflareHeaders = [
+  '/*',
+  `  Content-Security-Policy: ${csp}`,
+  ...securityHeaderPairs.map(([name, value]) => `  ${name}: ${value}`),
+  '',
+].join('\n');
+
 const outPath = join(repoRoot, 'security-headers.conf');
 const docsOutPath = join(repoRoot, 'security-headers-docs.conf');
 writeFileSync(outPath, contents);
 writeFileSync(docsOutPath, docsContents);
+
+const distDir = join(repoRoot, 'dist');
+if (existsSync(distDir)) {
+  writeFileSync(join(distDir, '_headers'), cloudflareHeaders);
+  console.log(
+    `[security-headers] wrote ${join(distDir, '_headers')} (Cloudflare Pages)`
+  );
+} else {
+  console.warn(
+    '[security-headers] dist/ not found; skipped Cloudflare Pages _headers'
+  );
+}
+
 console.log(
   `[security-headers] wrote ${outPath} with ${scriptOrigins.length} script-src / ${connectOrigins.length} connect-src origin(s)`
 );
