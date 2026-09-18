@@ -1,0 +1,68 @@
+name: Sync fork with upstream
+
+on:
+  schedule:
+    # Daily at 03:17 UTC
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: upstream-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Merge upstream/main into fork main
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout fork main
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Merge upstream/main
+        id: merge
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if ! git remote get-url upstream >/dev/null 2>&1; then
+            git remote add upstream https://github.com/alam00000/bentopdf.git
+          fi
+
+          git fetch upstream main
+
+          before=$(git rev-parse HEAD)
+          if ! git merge --no-edit upstream/main; then
+            echo "::error::Merging upstream/main produced conflicts. Resolve them locally, then push."
+            git merge --abort || true
+            exit 1
+          fi
+          after=$(git rev-parse HEAD)
+
+          if [ "$before" = "$after" ]; then
+            echo "Upstream already merged; nothing to deploy."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Merged new upstream commits."
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Push synced main
+        if: steps.merge.outputs.changed == 'true'
+        run: git push origin main
+
+      - name: Trigger Cloudflare Pages deploy
+        # A push made with GITHUB_TOKEN does not trigger other workflows, so we
+        # explicitly dispatch the deploy workflow (workflow_dispatch is exempt).
+        if: steps.merge.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run cloudflare-pages.yml --ref main

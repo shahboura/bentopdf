@@ -2,3 +2,6 @@
 src/partials/footer.html
 
 blog/posts/
+
+# Cloudflare Pages config (TOML is not supported by Prettier without a plugin)
+wrangler.toml
