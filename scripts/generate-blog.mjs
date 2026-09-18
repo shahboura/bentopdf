@@ -426,7 +426,10 @@ function generate() {
   }
 
   // Static (non-generated) blog pages keep their hardcoded URLs, so point them
-  // at the configured SITE_URL. Generated pages already use SITE_URL.
+  // at the configured SITE_URL. Match the origin only at a URL boundary (before
+  // "/", a quote, "?", "#", whitespace, or the end of the value) so we never
+  // rewrite a substring of a longer host or an unrelated mention.
+  const defaultOriginPattern = /https:\/\/www\.bentopdf\.com(?=[\/"'?#\s]|$)/g;
   const generatedPages = new Set([
     'index.html',
     ...posts.map((post) => `${post.slug}.html`),
@@ -437,8 +440,9 @@ function generate() {
       const filePath = path.join(BLOG_DIR, entry);
       if (!fs.existsSync(filePath)) continue;
       const html = fs.readFileSync(filePath, 'utf-8');
-      if (!html.includes(DEFAULT_SITE_URL)) continue;
-      fs.writeFileSync(filePath, html.replaceAll(DEFAULT_SITE_URL, SITE_URL));
+      const rewritten = html.replace(defaultOriginPattern, SITE_URL);
+      if (rewritten === html) continue;
+      fs.writeFileSync(filePath, rewritten);
     }
   }
 
