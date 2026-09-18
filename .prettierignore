@@ -5,3 +5,6 @@ blog/posts/
 
 # Cloudflare Pages config (TOML is not supported by Prettier without a plugin)
 wrangler.toml
+
+# Cloudflare Pages headers file (extensionless; no Prettier parser)
+public/_headers

@@ -1,0 +1,26 @@
+# Cloudflare Pages response headers (fork-only).
+# CSP and security headers mirror the defaults of scripts/generate-security-headers.mjs
+# (used for the nginx/Docker deployment); update both if the app's origins change.
+# X-Robots-Tag keeps this deployment out of search engines (the static equivalent
+# of the Docker ROBOTS_NOINDEX=true runtime option).
+
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'unsafe-eval' blob: https://cdn.jsdelivr.net; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com https://rawcdn.githack.com; connect-src 'self' blob: https://api.github.com https://fonts.gstatic.com https://cdn.jsdelivr.net https://bentopdf-cors-proxy.bentopdf.workers.dev https://rawcdn.githack.com; object-src 'none'; base-uri 'self'; frame-src 'self' blob:; frame-ancestors 'self'; form-action 'self'
+  X-Frame-Options: SAMEORIGIN
+  X-Content-Type-Options: nosniff
+  X-XSS-Protection: 1; mode=block
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), camera=(), microphone=(), payment=(), usb=(), interest-cohort=()
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: credentialless
+  Cross-Origin-Resource-Policy: cross-origin
+  X-Robots-Tag: noindex, follow
+
+# Serve WASM with the correct MIME type and cache it aggressively.
+/*.wasm
+  Content-Type: application/wasm
+  Cache-Control: public, max-age=31536000, immutable
+
+# Always revalidate the service worker so updates are picked up.
+/sw.js
+  Cache-Control: no-cache

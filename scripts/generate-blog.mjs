@@ -8,7 +8,10 @@ const __dirname = path.dirname(__filename);
 
 const POSTS_DIR = path.resolve(__dirname, '../blog/posts');
 const BLOG_DIR = path.resolve(__dirname, '../blog');
-const SITE_URL = 'https://www.bentopdf.com';
+const DEFAULT_SITE_URL = 'https://www.bentopdf.com';
+const SITE_URL = (process.env.SITE_URL || DEFAULT_SITE_URL)
+  .trim()
+  .replace(/\/+$/, '');
 const AUTHOR = {
   name: 'Alam',
   url: `${SITE_URL}/blog/author-alam`,
@@ -70,7 +73,7 @@ function parsePost(file) {
       `${file}: contains an em or en dash, which the house style forbids`
     );
   }
-  const match = raw.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+  const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
   if (!match) {
     throw new Error(`${file}: missing JSON frontmatter between --- markers`);
   }
@@ -419,6 +422,27 @@ function generate() {
     if (entry.endsWith('.html') && !keep.has(entry)) {
       fs.rmSync(path.join(BLOG_DIR, entry));
       console.log(`generate-blog: removed stale ${entry}`);
+    }
+  }
+
+  // Static (non-generated) blog pages keep their hardcoded URLs, so point them
+  // at the configured SITE_URL. Match the origin only at a URL boundary (before
+  // "/", a quote, "?", "#", whitespace, or the end of the value) so we never
+  // rewrite a substring of a longer host or an unrelated mention.
+  const defaultOriginPattern = /https:\/\/www\.bentopdf\.com(?=[\/"'?#\s]|$)/g;
+  const generatedPages = new Set([
+    'index.html',
+    ...posts.map((post) => `${post.slug}.html`),
+  ]);
+  const staticPages = [...keep].filter((entry) => !generatedPages.has(entry));
+  if (SITE_URL !== DEFAULT_SITE_URL) {
+    for (const entry of staticPages) {
+      const filePath = path.join(BLOG_DIR, entry);
+      if (!fs.existsSync(filePath)) continue;
+      const html = fs.readFileSync(filePath, 'utf-8');
+      const rewritten = html.replace(defaultOriginPattern, SITE_URL);
+      if (rewritten === html) continue;
+      fs.writeFileSync(filePath, rewritten);
     }
   }
 
