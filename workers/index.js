@@ -62,6 +62,7 @@ async function serveLibreOfficeAsset(request, env, name) {
       headers: {
         etag: object.httpEtag,
         'Cache-Control': 'public, max-age=3600',
+        'Cross-Origin-Resource-Policy': 'cross-origin',
       },
     });
   }
@@ -72,6 +73,10 @@ async function serveLibreOfficeAsset(request, env, name) {
   headers.set('Content-Type', contentTypeFor(name));
   headers.set('Cache-Control', 'public, max-age=3600');
   headers.set('X-Content-Type-Options', 'nosniff');
+  // Cloudflare does not apply `_headers` to Worker responses, so set CORP here.
+  // Without it, the page's Cross-Origin-Embedder-Policy blocks these (and the
+  // converter's worker scripts) with ERR_BLOCKED_BY_RESPONSE.
+  headers.set('Cross-Origin-Resource-Policy', 'cross-origin');
   // Serve the raw bytes; the client handles gzip decompression.
   headers.delete('Content-Encoding');
 

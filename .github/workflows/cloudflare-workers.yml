@@ -21,7 +21,7 @@ env:
   SITE_URL: ${{ vars.SITE_URL }}
   # Single source of truth is the R2 binding in wrangler.toml; keep these in sync.
   R2_BUCKET: bentopdf-assets
-  WRANGLER_VERSION: '4.134.0'
+  WRANGLER_VERSION: '4.135.0'
 
 jobs:
   deploy:
