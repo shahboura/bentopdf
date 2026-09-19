@@ -5,7 +5,7 @@
  * Version: 1.1.0
  */
 
-const CACHE_VERSION = 'bentopdf-v12';
+const CACHE_VERSION = 'bentopdf-v11';
 const CACHE_NAME = `${CACHE_VERSION}-static`;
 
 const trustedCdnOrigins = new Set(['https://cdn.jsdelivr.net']);
@@ -293,17 +293,6 @@ const CACHEABLE_EXTENSIONS =
   /\.(js|mjs|css|wasm|whl|zip|json|png|jpg|jpeg|gif|svg|woff|woff2|ttf|gz|br)$/;
 
 function shouldCache(pathname, isCDN = false) {
-  // LibreOffice assets include worker scripts and very large binaries. Letting
-  // the service worker intercept, buffer, and rebuild them breaks worker loads
-  // (for example browser.worker.global.js) and buffers tens of MB. Serve them
-  // directly and let the browser's HTTP cache handle repeats.
-  if (
-    pathname.includes('/libreoffice-wasm/') ||
-    pathname.includes('/@matbee/libreoffice-converter')
-  ) {
-    return false;
-  }
-
   if (isCDN) {
     return (
       pathname.includes('/@bentopdf/pymupdf-wasm') ||
