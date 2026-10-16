@@ -9,3 +9,6 @@ wrangler.toml
 # Cloudflare headers/assets-ignore files (extensionless; no Prettier parser)
 public/_headers
 public/.assetsignore
+
+public/pdfjs-viewer/
+public/pdfjs-annotation-viewer/
