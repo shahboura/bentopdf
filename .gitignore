@@ -58,3 +58,10 @@ bentopdf-pymupdf-wasm/
 # Local Wrangler state
 .wrangler/
 .dev.vars
+
+/blog/*.html
+!/blog/author-alam.html
+/src/partials/tool-links-static.html
+/security-headers-docs.conf
+/dist-*.zip
+/docs/.vitepress/cache/
