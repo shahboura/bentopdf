@@ -7,17 +7,14 @@ const __dirname = path.dirname(__filename);
 
 const DIST_DIR = path.resolve(__dirname, '../dist');
 const LOCALES_DIR = path.resolve(__dirname, '../public/locales');
-// The blog is BentoPDF's own content, so generate-blog.mjs and the hand-written
-// blog pages keep their canonicals on the official site, also in self-hosted
-// builds with a custom SITE_URL or BASE_URL.
-const OFFICIAL_SITE_URL = 'https://www.bentopdf.com';
-const SITE_URL = (process.env.SITE_URL || OFFICIAL_SITE_URL).replace(
+// This fork serves every canonical on its own SITE_URL, including the blog that
+// generate-blog.mjs writes, so blog pages are audited like any other page.
+const SITE_URL = (process.env.SITE_URL || 'https://www.bentopdf.com').replace(
   /\/+$/,
   ''
 );
 const BASE_PATH = (process.env.BASE_URL || '/').replace(/\/$/, '');
 const HOST = new URL(SITE_URL).hostname;
-const OFFICIAL_HOST = new URL(OFFICIAL_SITE_URL).hostname;
 
 const NOINDEX_ALLOWLIST = new Set(['404.html', 'wasm-settings.html']);
 const SKIP_DIRS = new Set([
@@ -95,23 +92,18 @@ function hasTrailingSlash(href) {
   return pathname !== '/' && pathname.endsWith('/');
 }
 
-function isBlogPage(rel) {
-  return rel.startsWith('blog/');
-}
-
 function expectedCanonicalForFile(rel) {
   const parts = rel.split('/');
   const fileName = parts.pop();
   const baseName = fileName.replace(/\.html$/, '');
   const slug = baseName === 'index' ? '' : baseName;
-  if (isBlogPage(rel)) {
-    return `${OFFICIAL_SITE_URL}/blog${slug ? `/${slug}` : ''}`;
-  }
   const translationKey = KEY_MAPPING[baseName] || toCamelCase(baseName);
   const segments = [SITE_URL];
   if (BASE_PATH) segments.push(BASE_PATH.replace(/^\//, ''));
   for (const dir of parts) {
-    if (LOCALE_DIRS.has(dir)) {
+    if (dir === 'blog') {
+      segments.push(dir);
+    } else if (LOCALE_DIRS.has(dir)) {
       const translated =
         baseName === 'index' ||
         Boolean(toolsByLang[dir] && toolsByLang[dir][translationKey]);
@@ -187,11 +179,10 @@ function auditHtml(file, knownSlugs) {
           `${file.rel}: canonical "${actual}" ends with "/" (the server redirects it to the slashless form)`
         );
       }
-      const expectedHost = isBlogPage(file.rel) ? OFFICIAL_HOST : HOST;
-      if (url.hostname !== expectedHost) {
+      if (url.hostname !== HOST) {
         warn(
           'canonical',
-          `${file.rel}: canonical host "${url.hostname}" != expected "${expectedHost}"`
+          `${file.rel}: canonical host "${url.hostname}" != expected "${HOST}"`
         );
       }
     } catch {
