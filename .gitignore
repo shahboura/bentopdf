@@ -59,6 +59,9 @@ bentopdf-pymupdf-wasm/
 .wrangler/
 .dev.vars
 
+# graphify knowledge graph output (regenerate with `graphify extract .`)
+graphify-out/
+
 /blog/*.html
 !/blog/author-alam.html
 /src/partials/tool-links-static.html
