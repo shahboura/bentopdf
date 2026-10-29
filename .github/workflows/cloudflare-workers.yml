@@ -19,9 +19,6 @@ env:
   BASE_URL: /
   SIMPLE_MODE: ${{ vars.SIMPLE_MODE || 'true' }}
   SITE_URL: ${{ vars.SITE_URL }}
-  # This fork is its own site on SITE_URL; without it upstream's indexing
-  # policy marks every page noindex.
-  ALLOW_INDEXING: ${{ vars.ALLOW_INDEXING || 'true' }}
   # Single source of truth is the R2 binding in wrangler.toml; keep these in sync.
   R2_BUCKET: bentopdf-assets
   WRANGLER_VERSION: '4.135.0'
