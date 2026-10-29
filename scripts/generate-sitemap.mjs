@@ -218,6 +218,16 @@ function generateSitemap() {
   const publicSitemapPath = path.resolve(__dirname, '../public/sitemap.xml');
   fs.writeFileSync(publicSitemapPath, sitemap);
 
+  // public/robots.txt ships upstream's sitemap URL; point it at SITE_URL so
+  // crawlers fetch this deployment's sitemap, not bentopdf.com's.
+  const robotsPath = path.join(DIST_DIR, 'robots.txt');
+  if (fs.existsSync(robotsPath)) {
+    const robots = fs
+      .readFileSync(robotsPath, 'utf-8')
+      .replace(/^Sitemap: .*$/m, `Sitemap: ${SITE_URL}/sitemap.xml`);
+    fs.writeFileSync(robotsPath, robots);
+  }
+
   console.log(
     `✅ Sitemap generated with ${htmlFiles.length} canonical URLs (${languages.length} hreflang alternates each)`
   );
