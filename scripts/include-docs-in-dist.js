@@ -95,10 +95,32 @@ try {
   const files = fs.readdirSync(targetDocsPath);
   console.log(`Copied ${files.length} items to dist/docs`);
 
+  allowDocsInlineScriptsInHeaders();
   addDocsToSitemap();
 } catch (error) {
   console.error('Error copying docs:', error.message);
   process.exit(1);
+}
+
+// Cloudflare Workers Static Assets applies `_headers` to every path, so docs
+// pages get the app CSP and nothing else. Add the docs inline-script hashes to
+// that policy, or VitePress's inline scripts are blocked in the browser.
+function allowDocsInlineScriptsInHeaders() {
+  const headersPath = path.join(mainDistPath, '_headers');
+  if (!fs.existsSync(headersPath)) return;
+  const source = fs.readFileSync(headersPath, 'utf-8');
+  const hashes = DOCS_INLINE_SCRIPT_HASHES.map((hash) => `'${hash}'`).join(' ');
+  const next = source.replace(
+    /^( {2}Content-Security-Policy: .*?script-src 'self' )/m,
+    `$1${hashes} `
+  );
+  if (next === source) {
+    console.warn(
+      'Warning: no script-src in dist/_headers, so docs inline scripts may be blocked by CSP.'
+    );
+    return;
+  }
+  fs.writeFileSync(headersPath, next);
 }
 
 function listDocsHtml(dir, prefix) {
@@ -111,7 +133,14 @@ function listDocsHtml(dir, prefix) {
       );
     } else if (entry.name.endsWith('.html') && entry.name !== '404.html') {
       const slug = entry.name.replace(/\.html$/, '');
-      urls.push(slug === 'index' ? prefix : `${prefix}/${slug}`);
+      const html = fs.readFileSync(path.join(dir, entry.name), 'utf-8');
+      const canonical = html.match(
+        /<link[^>]+rel="canonical"[^>]+href="([^"]+)"/
+      );
+      urls.push({
+        url: slug === 'index' ? prefix : `${prefix}/${slug}`,
+        canonical: canonical ? canonical[1] : null,
+      });
     }
   }
   return urls;
@@ -132,7 +161,9 @@ function addDocsToSitemap() {
   let xml = fs.readFileSync(sitemapPath, 'utf-8');
   if (xml.includes(`<loc>${siteUrl}/docs</loc>`)) return;
 
-  const urls = listDocsHtml(targetDocsPath, '/docs');
+  const urls = listDocsHtml(targetDocsPath, '/docs')
+    .filter(({ url, canonical }) => canonical === `${siteUrl}${url}`)
+    .map(({ url }) => url);
   const entries = urls
     .map(
       (url) =>
