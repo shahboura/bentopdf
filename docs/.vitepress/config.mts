@@ -7,7 +7,10 @@ import { nav, sidebar } from './navigation.mjs'
 import { DESCRIPTION, FOOTER_MESSAGE } from './i18n/theme-labels.mjs'
 import { completeDocsLanguages } from '../../scripts/docs-languages.mjs'
 
-const SITE_URL = 'https://www.bentopdf.com'
+const SITE_URL = (process.env.SITE_URL || 'https://www.bentopdf.com').replace(
+    /\/+$/,
+    ''
+)
 
 const docsDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const labelsDir = path.join(docsDir, '.vitepress', 'i18n')

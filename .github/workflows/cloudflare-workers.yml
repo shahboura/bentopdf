@@ -64,7 +64,7 @@ jobs:
         run: npm run test:run
 
       - name: Build
-        run: npm run build
+        run: npm run build:with-docs
 
       - name: Prepare dist for Workers Static Assets
         run: |
@@ -159,6 +159,9 @@ jobs:
           check "/" 200
           check "/merge-pdf" 200
           check "/fr/" 200
+          check "/docs/" 200
+          check "/docs/getting-started" 200
+          check "/docs/self-hosting/docker" 200
           for asset in soffice.js soffice.worker.js browser.worker.global.js soffice.wasm.gz soffice.data.gz; do
             check "/libreoffice-wasm/${asset}" 200
           done
