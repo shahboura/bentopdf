@@ -260,6 +260,8 @@ Je kunt ook specifieke functies in de PDF-editor (bijv. redactie, annotaties, fo
 
 **Vormen:** `annotation-shape`, `annotation-rectangle`, `annotation-circle`, `annotation-line`, `annotation-arrow`, `annotation-polygon`, `annotation-polyline`
 
+**Meten:** `annotation-measurement`, `mode-measure`, `annotation-distance`, `annotation-perimeter`, `annotation-area`
+
 **Formulier:** `form`, `form-textfield`, `form-checkbox`, `form-radio`, `form-select`, `form-listbox`, `form-fill-mode`
 
 **Redactie:** `redaction`, `redaction-area`, `redaction-text`, `redaction-apply`, `redaction-clear`
@@ -270,7 +272,7 @@ Je kunt ook specifieke functies in de PDF-editor (bijv. redactie, annotaties, fo
 
 **Paneel:** `panel`, `panel-sidebar`, `panel-search`, `panel-comment`
 
-**Tools:** `tools`, `pan`, `pointer`, `capture`
+**Tools:** `tools`, `pan`, `pointer`, `capture`, `organize`
 
 **Selectie:** `selection`, `selection-copy`
 

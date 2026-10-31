@@ -260,6 +260,8 @@ También puedes desactivar funciones concretas dentro del editor de PDF (p. ej.,
 
 **Formas:** `annotation-shape`, `annotation-rectangle`, `annotation-circle`, `annotation-line`, `annotation-arrow`, `annotation-polygon`, `annotation-polyline`
 
+**Medición:** `annotation-measurement`, `mode-measure`, `annotation-distance`, `annotation-perimeter`, `annotation-area`
+
 **Formulario:** `form`, `form-textfield`, `form-checkbox`, `form-radio`, `form-select`, `form-listbox`, `form-fill-mode`
 
 **Censura:** `redaction`, `redaction-area`, `redaction-text`, `redaction-apply`, `redaction-clear`
@@ -270,7 +272,7 @@ También puedes desactivar funciones concretas dentro del editor de PDF (p. ej.,
 
 **Panel:** `panel`, `panel-sidebar`, `panel-search`, `panel-comment`
 
-**Herramientas:** `tools`, `pan`, `pointer`, `capture`
+**Herramientas:** `tools`, `pan`, `pointer`, `capture`, `organize`
 
 **Selección:** `selection`, `selection-copy`
 

@@ -260,6 +260,8 @@ També pots desactivar funcions concretes de l'editor de PDF (p. ex., censura, a
 
 **Formes:** `annotation-shape`, `annotation-rectangle`, `annotation-circle`, `annotation-line`, `annotation-arrow`, `annotation-polygon`, `annotation-polyline`
 
+**Mesura:** `annotation-measurement`, `mode-measure`, `annotation-distance`, `annotation-perimeter`, `annotation-area`
+
 **Formulari:** `form`, `form-textfield`, `form-checkbox`, `form-radio`, `form-select`, `form-listbox`, `form-fill-mode`
 
 **Censura:** `redaction`, `redaction-area`, `redaction-text`, `redaction-apply`, `redaction-clear`
@@ -270,7 +272,7 @@ També pots desactivar funcions concretes de l'editor de PDF (p. ex., censura, a
 
 **Tauler:** `panel`, `panel-sidebar`, `panel-search`, `panel-comment`
 
-**Eines:** `tools`, `pan`, `pointer`, `capture`
+**Eines:** `tools`, `pan`, `pointer`, `capture`, `organize`
 
 **Selecció:** `selection`, `selection-copy`
 

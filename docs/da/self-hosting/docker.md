@@ -260,6 +260,8 @@ Du kan også deaktivere bestemte funktioner i PDF-editoren (f.eks. sortlægning,
 
 **Former:** `annotation-shape`, `annotation-rectangle`, `annotation-circle`, `annotation-line`, `annotation-arrow`, `annotation-polygon`, `annotation-polyline`
 
+**Måling:** `annotation-measurement`, `mode-measure`, `annotation-distance`, `annotation-perimeter`, `annotation-area`
+
 **Formular:** `form`, `form-textfield`, `form-checkbox`, `form-radio`, `form-select`, `form-listbox`, `form-fill-mode`
 
 **Sortlægning:** `redaction`, `redaction-area`, `redaction-text`, `redaction-apply`, `redaction-clear`
@@ -270,7 +272,7 @@ Du kan også deaktivere bestemte funktioner i PDF-editoren (f.eks. sortlægning,
 
 **Panel:** `panel`, `panel-sidebar`, `panel-search`, `panel-comment`
 
-**Værktøjer:** `tools`, `pan`, `pointer`, `capture`
+**Værktøjer:** `tools`, `pan`, `pointer`, `capture`, `organize`
 
 **Markering:** `selection`, `selection-copy`
 

@@ -260,6 +260,8 @@ services:
 
 **اشکال:** `annotation-shape`, `annotation-rectangle`, `annotation-circle`, `annotation-line`, `annotation-arrow`, `annotation-polygon`, `annotation-polyline`
 
+**اندازه‌گیری:** `annotation-measurement`, `mode-measure`, `annotation-distance`, `annotation-perimeter`, `annotation-area`
+
 **فرم:** `form`, `form-textfield`, `form-checkbox`, `form-radio`, `form-select`, `form-listbox`, `form-fill-mode`
 
 **حذف محتوای حساس:** `redaction`, `redaction-area`, `redaction-text`, `redaction-apply`, `redaction-clear`
@@ -270,7 +272,7 @@ services:
 
 **پنل:** `panel`, `panel-sidebar`, `panel-search`, `panel-comment`
 
-**ابزارها:** `tools`, `pan`, `pointer`, `capture`
+**ابزارها:** `tools`, `pan`, `pointer`, `capture`, `organize`
 
 **انتخاب:** `selection`, `selection-copy`
 

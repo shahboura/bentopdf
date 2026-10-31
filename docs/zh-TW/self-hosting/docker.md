@@ -260,6 +260,8 @@ services:
 
 **形狀：** `annotation-shape`, `annotation-rectangle`, `annotation-circle`, `annotation-line`, `annotation-arrow`, `annotation-polygon`, `annotation-polyline`
 
+**測量：** `annotation-measurement`, `mode-measure`, `annotation-distance`, `annotation-perimeter`, `annotation-area`
+
 **表單：** `form`, `form-textfield`, `form-checkbox`, `form-radio`, `form-select`, `form-listbox`, `form-fill-mode`
 
 **塗黑遮蔽：** `redaction`, `redaction-area`, `redaction-text`, `redaction-apply`, `redaction-clear`
@@ -270,7 +272,7 @@ services:
 
 **面板：** `panel`, `panel-sidebar`, `panel-search`, `panel-comment`
 
-**工具：** `tools`, `pan`, `pointer`, `capture`
+**工具：** `tools`, `pan`, `pointer`, `capture`, `organize`
 
 **選取：** `selection`, `selection-copy`
 

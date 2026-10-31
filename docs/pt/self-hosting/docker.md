@@ -260,6 +260,8 @@ Você também pode desativar recursos específicos dentro do Editor de PDF (p. e
 
 **Formas:** `annotation-shape`, `annotation-rectangle`, `annotation-circle`, `annotation-line`, `annotation-arrow`, `annotation-polygon`, `annotation-polyline`
 
+**Medição:** `annotation-measurement`, `mode-measure`, `annotation-distance`, `annotation-perimeter`, `annotation-area`
+
 **Formulário:** `form`, `form-textfield`, `form-checkbox`, `form-radio`, `form-select`, `form-listbox`, `form-fill-mode`
 
 **Redação:** `redaction`, `redaction-area`, `redaction-text`, `redaction-apply`, `redaction-clear`
@@ -270,7 +272,7 @@ Você também pode desativar recursos específicos dentro do Editor de PDF (p. e
 
 **Painel:** `panel`, `panel-sidebar`, `panel-search`, `panel-comment`
 
-**Ferramentas:** `tools`, `pan`, `pointer`, `capture`
+**Ferramentas:** `tools`, `pan`, `pointer`, `capture`, `organize`
 
 **Seleção:** `selection`, `selection-copy`
 

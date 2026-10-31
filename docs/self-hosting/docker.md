@@ -260,6 +260,8 @@ You can also disable specific features inside the PDF Editor (e.g., redaction, a
 
 **Shapes:** `annotation-shape`, `annotation-rectangle`, `annotation-circle`, `annotation-line`, `annotation-arrow`, `annotation-polygon`, `annotation-polyline`
 
+**Measurement:** `annotation-measurement`, `mode-measure`, `annotation-distance`, `annotation-perimeter`, `annotation-area`
+
 **Form:** `form`, `form-textfield`, `form-checkbox`, `form-radio`, `form-select`, `form-listbox`, `form-fill-mode`
 
 **Redaction:** `redaction`, `redaction-area`, `redaction-text`, `redaction-apply`, `redaction-clear`
@@ -270,7 +272,7 @@ You can also disable specific features inside the PDF Editor (e.g., redaction, a
 
 **Panel:** `panel`, `panel-sidebar`, `panel-search`, `panel-comment`
 
-**Tools:** `tools`, `pan`, `pointer`, `capture`
+**Tools:** `tools`, `pan`, `pointer`, `capture`, `organize`
 
 **Selection:** `selection`, `selection-copy`
 

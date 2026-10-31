@@ -260,6 +260,8 @@ Sie können auch einzelne Funktionen im PDF-Editor (z. B. Schwärzen, Annotation
 
 **Formen:** `annotation-shape`, `annotation-rectangle`, `annotation-circle`, `annotation-line`, `annotation-arrow`, `annotation-polygon`, `annotation-polyline`
 
+**Messen:** `annotation-measurement`, `mode-measure`, `annotation-distance`, `annotation-perimeter`, `annotation-area`
+
 **Formular:** `form`, `form-textfield`, `form-checkbox`, `form-radio`, `form-select`, `form-listbox`, `form-fill-mode`
 
 **Schwärzung:** `redaction`, `redaction-area`, `redaction-text`, `redaction-apply`, `redaction-clear`
@@ -270,7 +272,7 @@ Sie können auch einzelne Funktionen im PDF-Editor (z. B. Schwärzen, Annotation
 
 **Panel:** `panel`, `panel-sidebar`, `panel-search`, `panel-comment`
 
-**Werkzeuge:** `tools`, `pan`, `pointer`, `capture`
+**Werkzeuge:** `tools`, `pan`, `pointer`, `capture`, `organize`
 
 **Auswahl:** `selection`, `selection-copy`
 
