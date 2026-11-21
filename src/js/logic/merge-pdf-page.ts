@@ -7,6 +7,10 @@ import {
   cleanupLazyRendering,
 } from '../utils/render-utils.js';
 import { initPagePreview } from '../utils/page-preview.js';
+import {
+  enableFileListSort,
+  itemsInListOrder,
+} from '../utils/sortable-file-list.js';
 import { isCpdfAvailable } from '../utils/cpdf-helper.js';
 import {
   showWasmRequiredDialog,
@@ -546,7 +550,10 @@ export async function refreshMergeUI() {
     deleteBtn.title = trText('Remove file');
     deleteBtn.onclick = (e) => {
       e.stopPropagation();
-      state.files = state.files.filter((_, i) => i !== index);
+      state.files = itemsInListOrder(
+        document.getElementById('file-list'),
+        state.files
+      ).filter((file) => file !== f);
       updateUI();
     };
 
@@ -557,6 +564,14 @@ export async function refreshMergeUI() {
 
   createIcons({ icons });
   initializeFileListSortable();
+  enableFileListSort(
+    document.getElementById('file-controls'),
+    state.files,
+    (sorted) => {
+      state.files = sorted;
+      updateUI();
+    }
+  );
 
   const newFileModeBtn = fileModeBtn.cloneNode(true) as HTMLElement;
   const newPageModeBtn = pageModeBtn.cloneNode(true) as HTMLElement;
@@ -629,7 +644,13 @@ onPageReady(() => {
     fileInput.addEventListener('change', async (e) => {
       const files = (e.target as HTMLInputElement).files;
       if (files && files.length > 0) {
-        state.files = [...state.files, ...Array.from(files)];
+        state.files = [
+          ...itemsInListOrder(
+            document.getElementById('file-list'),
+            state.files
+          ),
+          ...Array.from(files),
+        ];
         await updateUI();
       }
     });
@@ -655,7 +676,13 @@ onPageReady(() => {
             f.name.toLowerCase().endsWith('.pdf')
         );
         if (pdfFiles.length > 0) {
-          state.files = [...state.files, ...pdfFiles];
+          state.files = [
+            ...itemsInListOrder(
+              document.getElementById('file-list'),
+              state.files
+            ),
+            ...pdfFiles,
+          ];
           await updateUI();
         }
       }

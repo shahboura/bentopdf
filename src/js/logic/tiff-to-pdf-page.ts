@@ -7,6 +7,7 @@ import {
 import {
   createDragHandle,
   enableFileListReorder,
+  enableFileListSort,
   moveItem,
 } from '../utils/sortable-file-list.js';
 import { createIcons, icons } from 'lucide';
@@ -68,6 +69,10 @@ const updateUI = () => {
     });
     enableFileListReorder(fileDisplayArea, (oldIndex, newIndex) => {
       files = moveItem(files, oldIndex, newIndex);
+      updateUI();
+    });
+    enableFileListSort(fileControls, files, (sorted) => {
+      files = sorted;
       updateUI();
     });
     createIcons({ icons });

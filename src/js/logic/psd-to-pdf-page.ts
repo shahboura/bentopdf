@@ -1,6 +1,7 @@
 import { showLoader, hideLoader, showAlert } from '../ui.js';
 import { downloadFile, formatBytes } from '../utils/helpers.js';
 import { state } from '../state.js';
+import { enableFileListSort } from '../utils/sortable-file-list.js';
 import { createIcons, icons } from 'lucide';
 import { loadPyMuPDF } from '../utils/pymupdf-loader.js';
 import type { PyMuPDFInstance } from '@/types';
@@ -64,6 +65,10 @@ onPageReady(() => {
         fileDiv.append(infoContainer, removeBtn);
         fileDisplayArea.appendChild(fileDiv);
       }
+      enableFileListSort(fileControls, state.files, (sorted) => {
+        state.files = sorted;
+        updateUI();
+      });
       createIcons({ icons });
       fileControls.classList.remove('hidden');
       processBtn.classList.remove('hidden');
